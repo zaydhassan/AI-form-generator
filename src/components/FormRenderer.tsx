@@ -31,7 +31,7 @@ export default function FormRenderer({ schema, onSubmitSuccess }: FormRendererPr
           const uploadRes = await axios.post("/api/upload", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
-          // Replace file list with uploaded URL string
+         
           data[field.name] = uploadRes.data.url;
         }
       }

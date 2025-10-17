@@ -56,23 +56,26 @@ const [forms, setForms] = useState<Form[]>([])
   }, [user]);
 
   async function handleGenerateForm() {
-    if (!aiPrompt) return alert("Please enter a prompt.");
-    setLoading(true);
-    try {
-      const res = await fetch("/api/generate-form", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiPrompt }),
-      });
-     const data: Form[] = await res.json()
-setForms(Array.isArray(data) ? data : [])
-    } catch (error) {
-      setFormSchema([]);
-    } finally {
-      setLoading(false);
+  if (!aiPrompt) return alert("Please enter a prompt.")
+  setLoading(true)
+  try {
+    const res = await fetch("/api/generate-form", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: aiPrompt }),
+    })
+    const data = await res.json()
+    if (Array.isArray(data.schema)) {
+      setFormSchema(data.schema)
+    } else {
+      setFormSchema([])
     }
+  } catch (error) {
+    setFormSchema([])
+  } finally {
+    setLoading(false)
   }
-
+}
   async function handleSaveForm() {
     setSaving(true);
     const res = await fetch("/api/forms", {
