@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import cloudinary from '../../lib/cloudinary'
-import formidable from 'formidable'
-import fs from 'fs'
+import formidable, { File } from 'formidable'
 
 export const config = {
   api: {
@@ -21,14 +20,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ message: 'File upload error', error: err })
     }
 
-    const file = files.file as formidable.File
+    let file: File | undefined
+    const uploaded = files.file
+
+    if (Array.isArray(uploaded)) {
+      file = uploaded[0]
+    } else if (uploaded) {
+      file = uploaded
+    }
+
+    if (!file) {
+      return res.status(400).json({ message: 'No file uploaded' })
+    }
 
     try {
       const result = await cloudinary.uploader.upload(file.filepath, {
         folder: 'ai-powered-forms',
         resource_type: 'auto',
       })
-
       return res.status(200).json({ url: result.secure_url })
     } catch (error) {
       return res.status(500).json({ message: 'Cloudinary upload failed', error })

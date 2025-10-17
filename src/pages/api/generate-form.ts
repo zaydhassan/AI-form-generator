@@ -39,8 +39,11 @@ Respond strictly as JSON only.
 
     const text = response.response.candidates?.[0]?.content?.parts?.[0]?.text
     res.status(200).json({ schema: JSON.parse(text || '[]') })
-  } catch (error: any) {
-    console.error('Gemini Error:', error)
-    res.status(500).json({ message: 'Error generating form schema', error: error.message })
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error("Gemini Error:", error.message)
+    res.status(500).json({ message: "Error generating form schema", error: error.message })
+  } else {
+    res.status(500).json({ message: "Unknown error generating form schema" })
   }
-}
+  }}

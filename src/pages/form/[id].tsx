@@ -6,7 +6,14 @@ export default function PublicFormPage() {
   const router = useRouter()
   const { id } = router.query
 
-  const [formSchema, setFormSchema] = useState<any[]>([])
+  interface Field {
+  name: string;
+  label: string;
+  type: "text" | "email" | "number" | "image";
+  required?: boolean;
+}
+
+const [formSchema, setFormSchema] = useState<Field[]>([])
 
   useEffect(() => {
     if (!id) return

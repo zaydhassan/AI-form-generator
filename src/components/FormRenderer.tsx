@@ -20,17 +20,18 @@ export default function FormRenderer({ schema, onSubmitSuccess }: FormRendererPr
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: Record<string, string | FileList | undefined>) => {
     setLoading(true);
     try {
       for (const field of schema) {
-        if (field.type === "image" && data[field.name]?.length > 0) {
-          const file = data[field.name][0];
+        if (field.type === "image" && data[field.name] && (data[field.name] as FileList).length > 0) {
+          const file = (data[field.name] as FileList)[0];
           const formData = new FormData();
           formData.append("file", file);
           const uploadRes = await axios.post("/api/upload", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
+          // Replace file list with uploaded URL string
           data[field.name] = uploadRes.data.url;
         }
       }

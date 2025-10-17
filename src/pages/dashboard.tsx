@@ -1,77 +1,110 @@
-import { useState, useEffect } from 'react'
-import { useUser, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/nextjs'
-import FormRenderer from '../components/FormRenderer'
-import { ExternalLink, Trash2 } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import FormRenderer from "../components/FormRenderer";
+import { ExternalLink, Trash2 } from "lucide-react";
+
+interface Field {
+  name: string;
+  label: string;
+  type: "text" | "email" | "number" | "image";
+  required?: boolean;
+}
+
+interface Form {
+  _id: string;
+  title: string;
+  schemaJson: Field[];
+  userId: string;
+  createdAt: string;
+  submission_count?: number;
+}
 
 const Dashboard = () => {
-  const { user } = useUser()
-  const [aiPrompt, setAiPrompt] = useState('')
-  const [formSchema, setFormSchema] = useState<any[]>([])
-  const [forms, setForms] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const { user } = useUser();
+  const [aiPrompt, setAiPrompt] = useState("");
+  interface Field {
+  name: string
+  label: string
+  type: "text" | "email" | "number" | "image"
+  required?: boolean
+}
+
+interface Form {
+  _id: string;
+  title: string;
+  schemaJson: Field[];
+  userId: string;
+  createdAt: string;
+  submission_count?: number;
+}
+
+const [formSchema, setFormSchema] = useState<Field[]>([])
+const [forms, setForms] = useState<Form[]>([])
+
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   async function fetchForms() {
-    if (!user?.id) return
-    const res = await fetch(`/api/forms?userId=${user.id}`)
-    const data = await res.json()
-    setForms(Array.isArray(data) ? data : [])
+    if (!user?.id) return;
+    const res = await fetch(`/api/forms?userId=${user.id}`);
+    const data: Form[] = await res.json();
+    setForms(Array.isArray(data) ? data : []);
   }
 
   useEffect(() => {
-    if (user?.id) fetchForms()
-  }, [user])
+    if (user?.id) fetchForms();
+  }, [user]);
 
   async function handleGenerateForm() {
-    if (!aiPrompt) return alert('Please enter a prompt.')
-    setLoading(true)
+    if (!aiPrompt) return alert("Please enter a prompt.");
+    setLoading(true);
     try {
-      const res = await fetch('/api/generate-form', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/generate-form", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: aiPrompt }),
-      })
-      const data = await res.json()
-      setFormSchema(Array.isArray(data.schema) ? data.schema : [])
+      });
+     const data: Form[] = await res.json()
+setForms(Array.isArray(data) ? data : [])
     } catch (error) {
-      setFormSchema([])
+      setFormSchema([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function handleSaveForm() {
-    setSaving(true)
-    const res = await fetch('/api/forms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    setSaving(true);
+    const res = await fetch("/api/forms", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId: user?.id,
         title: aiPrompt,
         schemaJson: formSchema,
       }),
-    })
+    });
     if (res.ok) {
-      setFormSchema([])
-      setAiPrompt('')
-      fetchForms()
+      setFormSchema([]);
+      setAiPrompt("");
+      fetchForms();
     }
-    setSaving(false)
+    setSaving(false);
   }
 
   async function handleDeleteForm(id: string) {
-    const res = await fetch('/api/forms', {
+    await fetch("/api/forms", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id })
-    })
-    if (res.ok) fetchForms()
+      body: JSON.stringify({ id }),
+    });
+    fetchForms();
   }
 
   function copyFormLink(formId: string) {
-    const link = `${window.location.origin}/form/${formId}`
-    navigator.clipboard.writeText(link)
-    alert('Link copied!')
+    const link = `${window.location.origin}/form/${formId}`;
+    navigator.clipboard.writeText(link);
+    alert("Link copied!");
   }
 
   return (
@@ -91,9 +124,9 @@ const Dashboard = () => {
             disabled={loading}
             className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg shadow-md hover:opacity-90 transition"
           >
-            {loading ? 'Generating...' : 'Generate Form'}
+            {loading ? "Generating..." : "Generate Form"}
           </button>
-          {Array.isArray(formSchema) && formSchema.length > 0 && (
+          {formSchema.length > 0 && (
             <div className="mt-10">
               <h2 className="text-2xl font-semibold mb-4">Form Preview</h2>
               <FormRenderer schema={formSchema} />
@@ -102,12 +135,11 @@ const Dashboard = () => {
                 disabled={saving}
                 className="mt-6 w-full bg-purple-600 text-white px-4 py-3 rounded-md font-bold shadow hover:bg-purple-700 transition"
               >
-                {saving ? 'Saving...' : 'Save Form to Dashboard'}
+                {saving ? "Saving..." : "Save Form to Dashboard"}
               </button>
             </div>
           )}
 
-          {/* --- Saved Forms Section --- */}
           <div className="mt-12">
             <h2 className="text-xl font-bold mb-6">Your Saved Forms</h2>
             {forms.length === 0 ? (
@@ -117,7 +149,10 @@ const Dashboard = () => {
             ) : (
               <div className="grid gap-5 md:grid-cols-2">
                 {forms.map((form) => (
-                  <div key={form._id} className="bg-white rounded-xl p-6 shadow flex flex-col min-h-[120px] justify-between border">
+                  <div
+                    key={form._id}
+                    className="bg-white rounded-xl p-6 shadow flex flex-col min-h-[120px] justify-between border"
+                  >
                     <div>
                       <div className="font-bold text-lg">{form.title}</div>
                       <div className="text-gray-500 text-sm mt-1 italic">
@@ -160,7 +195,7 @@ const Dashboard = () => {
         <RedirectToSignIn />
       </SignedOut>
     </>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
